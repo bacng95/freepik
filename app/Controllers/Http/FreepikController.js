@@ -3,6 +3,7 @@
 const axios = use('axios')
 const Database = use('Database');
 const FormData = require('form-data');
+const crypto = require('crypto');
 
 class FreepikController {
 
@@ -130,10 +131,10 @@ class FreepikController {
             this._mergeCookie(this._parseCookieBrower(resp2.headers['set-cookie']), cookie)
             await this._setCookie(cookie)
             
-            // await this._sendEvent(link, itemId)
+            await this._sendEvent(link, itemId)
 
             try {
-                let resp3 = await axios.get(`https://www.freepik.com/download-file/${itemId}?is_premium_item=0&is_premium_user=1`, {
+                let resp3 = await axios.get(`https://www.freepik.com/download-file/${itemId}?is_premium_item=1&is_premium_user=1`, {
                     headers: {
                         'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.148 Safari/537.36',
                         'upgrade-insecure-requests': 1,
@@ -168,37 +169,54 @@ class FreepikController {
         
     }
 
-    // async _sendEvent (link, item_id) {
+    
 
-    //     try {
-    //         let form = new FormData();
-    //         form.append('category', 'detail-modal')
-    //         form.append('action', 'premium-download')
-    //         form.append('label', item_id)
+    generateBoundary(){
+        const alphaNumericEncodingMap = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB'; //yes I know, "AB" appears twice
+        let boundary = "----WebKitFormBoundary";
+        for (var i = 0; i < 4; ++i) {
+            var randomness = crypto.randomBytes(4);
+            boundary += alphaNumericEncodingMap[randomness[3] & 0x3F]; //wasting bits makes me sad... but whatever
+            boundary += alphaNumericEncodingMap[randomness[2] & 0x3F];
+            boundary += alphaNumericEncodingMap[randomness[1] & 0x3F];
+            boundary += alphaNumericEncodingMap[randomness[0] & 0x3F];
+        }
+        return boundary;
+    }
 
-    //         let cookie = await this._getCookie()
-    //         let resp = await axios.post('https://www.freepik.com/xhr/events/send', form,
-    //         {
-    //             headers: {
-    //                 'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.148 Safari/537.36',
-    //                 'upgrade-insecure-requests': 1,
-    //                 'referer': link,
-    //                 'origin': 'https://www.freepik.com',
-    //                 'cookie': this._cookieObjectToString(cookie),
-    //                 'accept-encoding': 'gzip, deflate, br',
-    //                 'x-csrf-token': cookie['csrf_freepik'],
-    //                 'x-requested-with': 'XMLHttpRequest',
-    //                 'content-type': 'multipart/form-data'
-    //             },
-    //             maxRedirects: 0
-    //         })
+    async _sendEvent (link, item_id) {
 
-    //         this._mergeCookie(this._parseCookieBrower(resp.headers['set-cookie']), cookie)
-    //         await this._setCookie(cookie)
-    //     } catch (error) {
-    //         console.log(error.message)
-    //     }
-    // }
+        try {
+            let form = new FormData();
+            form._boundary = this.generateBoundary();
+            form.append('category', 'detail-modal')
+            form.append('action', 'premium-download')
+            form.append('label', parseInt(item_id))
+
+            let cookie = await this._getCookie()
+            // console.log(form._boundary)
+            let resp = await axios.post('https://www.freepik.com/xhr/events/send', form,
+            {
+                headers: {
+                    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.148 Safari/537.36',
+                    'upgrade-insecure-requests': 1,
+                    'referer': link,
+                    'origin': 'https://www.freepik.com',
+                    'cookie': this._cookieObjectToString(cookie),
+                    'accept-encoding': 'gzip, deflate, br',
+                    'x-csrf-token': cookie['csrf_freepik'],
+                    'x-requested-with': 'XMLHttpRequest',
+                    'Content-Type': `multipart/form-data; boundary=${form._boundary}`
+                },
+                maxRedirects: 0
+            })
+
+            this._mergeCookie(this._parseCookieBrower(resp.headers['set-cookie']), cookie)
+            await this._setCookie(cookie)
+        } catch (error) {
+            console.log(error.message)
+        }
+    }
 
     _cookieObjectToString(cookie) {
         let _cookie = ''
