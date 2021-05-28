@@ -62,7 +62,9 @@
         }).done(function(response) {
           if (response.code == 1) {
             geting = false
-            $('.button-download').html('<a href="' + response.data + '" class="link-download">LINK CỦA ĐẠI CA ĐÂY</a>')
+            $('.button-download').html('<a href="' + response.data.link + '" class="link-download">LINK CỦA ĐẠI CA ĐÂY</a>')
+            $('.static .count-download').html('Count Download: ' + response.data.account.countDownloads)
+            $('.static .limit-download').html('Limit Download: ' + response.data.account.limitDownloads)
           }
         });
       }

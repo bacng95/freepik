@@ -145,7 +145,10 @@ class FreepikController {
     
                 console.log(error.response.headers.location);
     
-                return error.response.headers.location
+                return {
+                    link: error.response.headers.location,
+                    account: resp2.data
+                }
             }
         }
         
