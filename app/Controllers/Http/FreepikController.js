@@ -154,7 +154,7 @@ class FreepikController {
     
                 this._mergeCookie(this._parseCookieBrower(error.response.headers['set-cookie']), cookie)
                 await this._setCookie(cookie)
-    
+                console.log(error.response.headers.location)
                 if ( error.response.headers.location.indexOf('/download/') != -1) {
                     return error.response.headers.location
                 }
