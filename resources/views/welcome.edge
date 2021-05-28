@@ -65,6 +65,8 @@
             $('.button-download').html('<a href="' + response.data.link + '" class="link-download">LINK CỦA ĐẠI CA ĐÂY</a>')
             $('.static .count-download').html('Count Download: ' + response.data.account.countDownloads)
             $('.static .limit-download').html('Limit Download: ' + response.data.account.limitDownloads)
+          } else {
+            $('.button-download').html('<span class="waiting-geting">' + response.message + '</a>')
           }
         });
       }

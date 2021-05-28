@@ -31,7 +31,17 @@ class FreepikController {
 
         let link = await this.getLink(url)
 
-        if (link) {
+        // Challenge 1
+        if ( typeof link === "string" && link.indexOf('download-file') != -1) {
+            link = await this.getLink(link)
+        }
+
+        // Challenge 2
+        if ( typeof link === "string" && link.indexOf('download-file') != -1) {
+            link = await this.getLink(link)
+        }
+
+        if (typeof link === "object") {
             return response.json({
                 code: 1,
                 message: 'Ngon rồi đại ca !',
@@ -40,7 +50,7 @@ class FreepikController {
         } else {
             return response.json({
                 code: 0,
-                message: 'Có lỗi rồi đại ca ơi !',
+                message: 'Có biến rồi đại ca ơi !',
             })
         }
     }
@@ -143,7 +153,9 @@ class FreepikController {
                 await this._setCookie(cookie)
                 this._mergeCookie(this._parseCookieBrower(error.response.headers['set-cookie']), cookie)
     
-                console.log(error.response.headers.location);
+                if ( error.response.headers.location.indexOf('download-file') != -1) {
+                    return error.response.headers.location
+                }
     
                 return {
                     link: error.response.headers.location,
