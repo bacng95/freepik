@@ -28,15 +28,8 @@ class FreepikController {
 
     async getLinkAction({request, response}) {
         const { url } = request.all()
-        let itemId = ''
-        if (url && url != '') {
-            // Get ID of link
-            itemId = url.toString().replace('.htm', '')
-            itemId = itemId.split('_')
-            itemId = itemId[itemId.length - 1]
-        }
 
-        let link = await this.getLink(itemId)
+        let link = await this.getLink(url)
 
         if (link) {
             return response.json({
@@ -50,6 +43,18 @@ class FreepikController {
                 message: 'Có lỗi rồi đại ca ơi !',
             })
         }
+    }
+
+    _linkToId(link) {
+        let itemId = ''
+        if (link && link != '') {
+            // Get ID of link
+            itemId = link.toString().replace('.htm', '')
+            itemId = itemId.split('_')
+            itemId = itemId[itemId.length - 1]
+        }
+
+        return itemId
     }
 
     async getInfoAccount({request, response}) {
@@ -72,18 +77,18 @@ class FreepikController {
         await this._setCookie(cookie)
 
         return response.json({
-            code: 0,
+            code: 1,
             message: 'Ngon rồi đại ca!',
             data: resp.data
         })
     }
 
-    async getLink(item_id) {
-        
-        if (item_id) {
+    async getLink(link) {
+        const itemId = this._linkToId(link)
+        if (itemId) {
             let cookie = await this._getCookie()
         
-            let resp = await axios.get(`https://www.freepik.com/xhr/register-download/${item_id}`, {
+            let resp = await axios.get(`https://www.freepik.com/xhr/register-download/${itemId}`, {
                 headers: {
                     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.148 Safari/537.36',
                     'upgrade-insecure-requests': 1,
@@ -97,13 +102,30 @@ class FreepikController {
             })
     
             this._mergeCookie(this._parseCookieBrower(resp.headers['set-cookie']), cookie)
-    
+            await this._setCookie(cookie)
+
+            let resp2 = await axios.get('https://www.freepik.com/xhr/validate', {
+                headers: {
+                    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.148 Safari/537.36',
+                    'upgrade-insecure-requests': 1,
+                    'referer': link,
+                    'cookie': this._cookieObjectToString(cookie),
+                    'accept-encoding': 'gzip, deflate, br',
+                    'x-csrf-token': cookie['csrf_freepik'],
+                    'x-requested-with': 'XMLHttpRequest'
+                },
+                maxRedirects: 0
+            })
+
+            this._mergeCookie(this._parseCookieBrower(resp.headers['set-cookie']), cookie)
+            await this._setCookie(cookie)
+            
             try {
-                let resp3 = await axios.get(`https://www.freepik.com/download-file/${item_id}?is_premium_item=0&is_premium_user=1`, {
+                let resp3 = await axios.get(`https://www.freepik.com/download-file/${itemId}?is_premium_item=0&is_premium_user=1`, {
                     headers: {
                         'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.148 Safari/537.36',
                         'upgrade-insecure-requests': 1,
-                        'referer': `https://www.freepik.com/premium-psd/blank-photo-frame-mockup-design_${item_id}.htm`,
+                        'referer': link,
                         'cookie': this._cookieObjectToString(cookie),
                         'accept-encoding': 'gzip, deflate, br',
                         'x-csrf-token': cookie['csrf_freepik'],

@@ -5,7 +5,7 @@ const freePik = require('../Controllers/Http/FreepikController')
 
 class Refresh extends Task {
   static get schedule () {
-    return '* * * * *'
+    return '0 * * * *'
   }
 
   async handle () {
