@@ -2,6 +2,7 @@
 
 const axios = use('axios')
 const Database = use('Database');
+const FormData = require('form-data');
 
 class FreepikController {
 
@@ -170,12 +171,13 @@ class FreepikController {
     async _sendEvent (link, item_id) {
 
         try {
+            let form = new FormData();
+            form.append('category', 'detail-modal')
+            form.append('action', 'premium-download')
+            form.append('label', item_id)
+
             let cookie = await this._getCookie()
-            let resp = await axios.post('https://www.freepik.com/xhr/events/send', {
-                'category': 'detail-modal',
-                'action': 'premium-download',
-                'label': item_id
-            },
+            let resp = await axios.post('https://www.freepik.com/xhr/events/send', form,
             {
                 headers: {
                     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.148 Safari/537.36',
@@ -194,7 +196,7 @@ class FreepikController {
             this._mergeCookie(this._parseCookieBrower(resp.headers['set-cookie']), cookie)
             await this._setCookie(cookie)
         } catch (error) {
-            console.log(error)
+            console.log(error.message)
         }
     }
 
