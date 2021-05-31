@@ -108,7 +108,7 @@ class FreepikController {
         const itemId = this._linkToId(link, challenge)
         if (itemId) {
 
-            this.Logs(itemId, 'Bắt đầu get link - ' + challenge ? '0' : '1')
+            await this.Logs(itemId, 'Bắt đầu get link - ' + challenge ? '0' : '1')
             
             let cookie = await this._getCookie()
         
@@ -198,7 +198,7 @@ class FreepikController {
 
         try {
             
-            this.Logs(itemId, 'Send event')
+            await this.Logs(itemId, 'Send event')
 
             let form = new FormData();
             form._boundary = this.generateBoundary();
