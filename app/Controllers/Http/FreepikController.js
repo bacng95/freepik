@@ -7,6 +7,16 @@ const crypto = require('crypto');
 
 class FreepikController {
 
+    async Logs(action_id, action_name) {
+        const type = "freepik";
+        await Database.table('system_logs')
+        .insert({
+            type,
+            action_name,
+            action_id
+        })
+    }
+
     async refreshCsrfToken () {
         let cookie = await this._getCookie()
         
@@ -97,6 +107,9 @@ class FreepikController {
     async getLink(link, challenge) {
         const itemId = this._linkToId(link, challenge)
         if (itemId) {
+
+            this.Logs(itemId, 'Bắt đầu get link - ' + challenge ? '0' : '1')
+            
             let cookie = await this._getCookie()
         
             let resp = await axios.get(`https://www.freepik.com/xhr/register-download/${itemId}`, {
@@ -152,14 +165,11 @@ class FreepikController {
                 
                 return '';
             } catch (error) {
-    
                 this._mergeCookie(this._parseCookieBrower(error.response.headers['set-cookie']), cookie)
                 await this._setCookie(cookie)
-                console.log(error.response.headers.location)
                 if ( error.response.headers.location.indexOf('/download/') != -1) {
                     return error.response.headers.location
                 }
-    
                 return {
                     link: error.response.headers.location,
                     account: resp2.data
