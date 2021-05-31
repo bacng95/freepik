@@ -13,7 +13,7 @@ class FreepikController {
         .insert({
             type,
             action_name,
-            action_id
+            data: action_id
         })
     }
 
