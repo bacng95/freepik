@@ -197,6 +197,9 @@ class FreepikController {
     async _sendEvent (link, item_id) {
 
         try {
+            
+            this.Logs(itemId, 'Send event')
+
             let form = new FormData();
             form._boundary = this.generateBoundary();
             form.append('category', 'detail-modal')
