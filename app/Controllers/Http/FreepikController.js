@@ -44,12 +44,12 @@ class FreepikController {
         let link = await this.getLink(url)
 
         // Challenge 1
-        if ( typeof link === "string" && link.indexOf('download-file') != -1) {
+        if ( typeof link === "string" && link.indexOf('download') != -1) {
             link = await this.getLink(link, true)
         }
 
         // Challenge 2
-        if ( typeof link === "string" && link.indexOf('download-file') != -1) {
+        if ( typeof link === "string" && link.indexOf('download') != -1) {
             link = await this.getLink(link, true)
         }
 
