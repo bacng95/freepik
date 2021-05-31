@@ -198,7 +198,7 @@ class FreepikController {
 
         try {
             
-            await this.Logs(itemId, 'Send event')
+            await this.Logs(item_id, 'Send event')
 
             let form = new FormData();
             form._boundary = this.generateBoundary();
