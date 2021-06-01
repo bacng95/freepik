@@ -45,7 +45,7 @@ class FreepikController {
         // Check with captcha
         
         if ( typeof link === "string" && link.indexOf('download') != -1) {
-            const token = await this.init2Captcha()
+            const token = await this.init2Captcha(url)
             link = await this.getLink(url, token)
         }
 
@@ -234,6 +234,35 @@ class FreepikController {
         return itemDetailt.data.data.detail
     }
 
+    async wait2CaptchaToken(id) {
+        return await new Promise(resolve => {
+            let captchaLoop = 20
+            const interval = setInterval(async () => {
+                let captchaResult = await axios.get(`http://2captcha.com/res.php`, {
+                    params: {
+                        key: '249c6ca0dcc6121f3a128072851e7266',
+                        action: 'get',
+                        id: id,
+                        json: 1
+                    },
+                })
+
+                if (captchaResult.data.status == 1) {
+                    resolve(captchaResult.data.request)
+                    console.log(id + ': get token - ' + captchaResult.data.request)
+                    clearInterval(interval);
+                }
+
+                if (captchaLoop < 0) {
+                    clearInterval(interval);
+                    resolve('')
+                    console.log(id + ': get token failt')
+                }
+                captchaLoop--;
+            }, 2000);
+        });
+    }
+
     async init2Captcha(url) {
         console.log('init Captcha')
         let token = '';
@@ -251,31 +280,7 @@ class FreepikController {
             // return captcha.data.request
             console.log(captcha.data.request + ': wait return token')
             // Test captcha Loop 
-            let captchaLoop = 15
-
-            let interval = setInterval(async () => {
-                console.log(captcha.data.request + ': wait return token')
-                let captchaResult = await axios.get(`http://2captcha.com/in.php`, {
-                    params: {
-                        key: '249c6ca0dcc6121f3a128072851e7266',
-                        action: 'get',
-                        id: captcha.data.request
-                    },
-                })
-
-                if (captchaResult.data.status == 1) {
-                    clearInterval(interval);
-                    token = captchaResult.data.request
-                    console.log(captcha.data.request + ': get token - ' + token)
-                }
-
-                if (captchaLoop < 0) {
-                    clearInterval(interval);
-                    console.log(captcha.data.request + ': get token failt')
-                }
-
-                captchaLoop--;
-            }, 2000);
+            token = await this.wait2CaptchaToken(captcha.data.request)
 
         }
         return token
