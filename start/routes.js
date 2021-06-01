@@ -20,3 +20,4 @@ Route.on('/').render('welcome')
 Route.get('run', 'FreepikController.regSession');
 Route.get('account', 'FreepikController.getInfoAccount');
 Route.get('get-link', 'FreepikController.getLinkAction');
+Route.get('captcha', 'FreepikController.captcha');

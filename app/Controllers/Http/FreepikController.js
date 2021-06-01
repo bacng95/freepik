@@ -30,8 +30,7 @@ class FreepikController {
                 'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
                 'x-csrf-token': cookie['csrf_freepik'],
                 'x-requested-with': 'XMLHttpRequest'
-            },
-            maxRedirects: 0
+            }
         })
         this._mergeCookie(this._parseCookieBrower(resp.headers['set-cookie']), cookie)
         await this._setCookie(cookie)
@@ -43,15 +42,17 @@ class FreepikController {
 
         let link = await this.getLink(url)
 
-        // Challenge 1
+        // Check with captcha
+        
         if ( typeof link === "string" && link.indexOf('download') != -1) {
-            link = await this.getLink(link, true)
+            const token = await this.init2Captcha()
+            link = await this.getLink(url, token)
         }
 
-        // Challenge 2
-        if ( typeof link === "string" && link.indexOf('download') != -1) {
-            link = await this.getLink(link, true)
-        }
+        // // Challenge 2
+        // if ( typeof link === "string" && link.indexOf('download') != -1) {
+        //     link = await this.getLink(link, true)
+        // }
 
         if (typeof link === "object") {
             return response.json({
@@ -70,12 +71,113 @@ class FreepikController {
     _linkToId(link, challenge) {
         let itemId = ''
         if (link && link != '') {
-            itemId = link.toString().replace('.htm', '')
-            itemId = challenge ? itemId.split('/') : itemId.split('_')
+            // itemId = link.toString().replace('.htm', '')
+            itemId = link.toString().split('_')
             itemId = itemId[itemId.length - 1]
+            itemId = itemId.split('.')
+            itemId = itemId[0]
         }
 
         return itemId
+    }
+
+    async goingWebsite (url) {
+        const itemId = this._linkToId(url)
+        let cookie = await this._getCookie()
+
+        // Load trang
+        await axios.get('https://www.freepik.com/home', {
+            headers: {
+                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.148 Safari/537.36',
+                'upgrade-insecure-requests': 1,
+                'cookie': this._cookieObjectToString(cookie),
+                'accept-encoding': 'gzip, deflate, br',
+                'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+                'accept-language': 'vi-VN,vi;q=0.9,fr-FR;q=0.8,fr;q=0.7,en-US;q=0.6,en;q=0.5',
+                'sec-fetch-dest': 'document',
+                'sec-fetch-mode': 'navigate',
+                'sec-fetch-site': 'same-origin'
+            },
+            maxRedirects: 0
+        })
+
+        // Gửi last failed payment
+        await axios.get('https://www.freepik.com/xhr/user/last-failed-payment', {
+            headers: {
+                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.148 Safari/537.36',
+                'referer': 'https://www.freepik.com/home',
+                'cookie': this._cookieObjectToString(cookie),
+                'accept-encoding': 'gzip, deflate, br',
+                'accept': 'application/json, text/plain, */*',
+                'accept-language': 'vi-VN,vi;q=0.9,fr-FR;q=0.8,fr;q=0.7,en-US;q=0.6,en;q=0.5',
+                'sec-fetch-dest': 'empty',
+                'sec-fetch-mode': 'cors',
+                'sec-fetch-site': 'same-origin',
+                'x-csrf-token': cookie['csrf_freepik'],
+                'x-requested-with': 'XMLHttpRequest'
+            },
+            maxRedirects: 0
+        })
+
+
+        // Gửi Follow
+        await axios.get('https://www.freepik.com/xhr/user/collection/followed', {
+            headers: {
+                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.148 Safari/537.36',
+                'referer': 'https://www.freepik.com/home',
+                'cookie': this._cookieObjectToString(cookie),
+                'accept-encoding': 'gzip, deflate, br',
+                'accept': 'application/json, text/plain, */*',
+                'accept-language': 'vi-VN,vi;q=0.9,fr-FR;q=0.8,fr;q=0.7,en-US;q=0.6,en;q=0.5',
+                'sec-fetch-dest': 'empty',
+                'sec-fetch-mode': 'cors',
+                'sec-fetch-site': 'same-origin',
+                'x-csrf-token': cookie['csrf_freepik'],
+                'x-requested-with': 'XMLHttpRequest'
+            },
+            maxRedirects: 0
+        })
+
+        // Lấy detail
+        const itemDetailt = await axios.get(`https://www.freepik.com/xhr/detail/${itemId}`, {
+            headers: {
+                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.148 Safari/537.36',
+                'referer': url,
+                'cookie': this._cookieObjectToString(cookie),
+                'accept-encoding': 'gzip, deflate, br',
+                'accept': 'application/json, text/plain, */*',
+                'accept-language': 'vi-VN,vi;q=0.9,fr-FR;q=0.8,fr;q=0.7,en-US;q=0.6,en;q=0.5',
+                'sec-fetch-dest': 'empty',
+                'sec-fetch-mode': 'cors',
+                'sec-fetch-site': 'same-origin',
+                'x-csrf-token': cookie['csrf_freepik'],
+                'x-requested-with': 'XMLHttpRequest'
+            },
+            maxRedirects: 0
+        })
+
+        // Follow Author
+        await axios.get(`https://www.freepik.com/xhr/user/follow/?author=${itemDetailt.data.data.detail.author.userId}`, {
+            headers: {
+                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.148 Safari/537.36',
+                'referer': url,
+                'cookie': this._cookieObjectToString(cookie),
+                'accept-encoding': 'gzip, deflate, br',
+                'accept': 'application/json, text/plain, */*',
+                'accept-language': 'vi-VN,vi;q=0.9,fr-FR;q=0.8,fr;q=0.7,en-US;q=0.6,en;q=0.5',
+                'sec-fetch-dest': 'empty',
+                'sec-fetch-mode': 'cors',
+                'sec-fetch-site': 'same-origin',
+                'x-csrf-token': cookie['csrf_freepik'],
+                'x-requested-with': 'XMLHttpRequest'
+            },
+            maxRedirects: 0
+        })
+
+        this._mergeCookie(this._parseCookieBrower(itemDetailt.headers['set-cookie']), cookie)
+        await this._setCookie(cookie)
+
+        return itemDetailt.data.data.detail
     }
 
     async getInfoAccount({request, response}) {
@@ -104,13 +206,137 @@ class FreepikController {
         })
     }
 
-    async getLink(link, challenge) {
-        const itemId = this._linkToId(link, challenge)
+    async getDetail(url) {
+        const itemId = this._linkToId(url)
+        let cookie = await this._getCookie()
+
+         // Lấy detail
+        const itemDetailt = await axios.get(`https://www.freepik.com/xhr/detail/${itemId}`, {
+            headers: {
+                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.148 Safari/537.36',
+                'referer': url,
+                'cookie': this._cookieObjectToString(cookie),
+                'accept-encoding': 'gzip, deflate, br',
+                'accept': 'application/json, text/plain, */*',
+                'accept-language': 'vi-VN,vi;q=0.9,fr-FR;q=0.8,fr;q=0.7,en-US;q=0.6,en;q=0.5',
+                'sec-fetch-dest': 'empty',
+                'sec-fetch-mode': 'cors',
+                'sec-fetch-site': 'same-origin',
+                'x-csrf-token': cookie['csrf_freepik'],
+                'x-requested-with': 'XMLHttpRequest'
+            },
+            maxRedirects: 0
+        })
+
+        this._mergeCookie(this._parseCookieBrower(itemDetailt.headers['set-cookie']), cookie)
+        await this._setCookie(cookie)
+
+        return itemDetailt.data.data.detail
+    }
+
+    async init2Captcha(url) {
+        console.log('init Captcha')
+        let token = '';
+        const captcha = await axios.get(`http://2captcha.com/in.php`, {
+            params: {
+                key: '249c6ca0dcc6121f3a128072851e7266',
+                method: 'userrecaptcha',
+                googlekey: '6LfEmSMUAAAAAEDmOgt1G7o7c53duZH2xL_TXckC',
+                pageurl: url,
+                json: 1
+            },
+        })
+
+        if (captcha.data.status == 1) {
+            // return captcha.data.request
+            console.log(captcha.data.request + ': wait return token')
+            // Test captcha Loop 
+            let captchaLoop = 15
+
+            let interval = setInterval(async () => {
+                console.log(captcha.data.request + ': wait return token')
+                let captchaResult = await axios.get(`http://2captcha.com/in.php`, {
+                    params: {
+                        key: '249c6ca0dcc6121f3a128072851e7266',
+                        action: 'get',
+                        id: captcha.data.request
+                    },
+                })
+
+                if (captchaResult.data.status == 1) {
+                    clearInterval(interval);
+                    token = captchaResult.data.request
+                    console.log(captcha.data.request + ': get token - ' + token)
+                }
+
+                if (captchaLoop < 0) {
+                    clearInterval(interval);
+                    console.log(captcha.data.request + ': get token failt')
+                }
+
+                captchaLoop--;
+            }, 2000);
+
+        }
+        return token
+    }
+
+
+    async sendPointGG(url, item_detail) {
+        let cookie = await this._getCookie()
+        const id = this._linkToId(url)
+        const userPremium = 1
+        const userEssential = item_detail.is_essential
+        const position = 0
+        const exclusive = 0
+        const userid = 29936080
+        const format = 'category'
+        const ga_client_id = cookie['_ga']
+        const r = parseFloat(this._getRandomArbitrary(0.4399444398590271, 0.9444651633182548).toFixed(16))
+
+        console.log(r)
+
+        const itemDetailt = await axios.get('https://www.freepik.com/download.gif', {
+            params: {
+                id,
+                userPremium,
+                userEssential,
+                position,
+                exclusive,
+                userid,
+                format,
+                ga_client_id,
+                r
+            },
+            headers: {
+                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.148 Safari/537.36',
+                'referer': url,
+                'cookie': this._cookieObjectToString(cookie),
+                'accept-encoding': 'gzip, deflate, br',
+                'accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+                'accept-language': 'vi-VN,vi;q=0.9,fr-FR;q=0.8,fr;q=0.7,en-US;q=0.6,en;q=0.5',
+                'sec-fetch-dest': 'image',
+                'sec-fetch-mode': 'no-cors',
+                'sec-fetch-site': 'same-origin',
+            }
+        })
+    }
+
+    _getRandomArbitrary(min, max) {
+        return Math.random() * (max - min) + min;
+    }
+
+    async getLink(link, token = '') {
+        const itemId = this._linkToId(link)
         if (itemId) {
 
-            await this.Logs(itemId, 'Bắt đầu get link - ' + challenge ? '0' : '1')
+            // await this.Logs(itemId, 'Bắt đầu get link - ' + challenge ? '1' : '0')
             
             let cookie = await this._getCookie()
+
+            // truy cap website
+
+            const itemDetail = await this.getDetail(link)
         
             let resp = await axios.get(`https://www.freepik.com/xhr/register-download/${itemId}`, {
                 headers: {
@@ -143,11 +369,9 @@ class FreepikController {
 
             this._mergeCookie(this._parseCookieBrower(resp2.headers['set-cookie']), cookie)
             await this._setCookie(cookie)
-            
-            await this._sendEvent(link, itemId)
 
             try {
-                let resp3 = await axios.get(`https://www.freepik.com/download-file/${itemId}?is_premium_item=1&is_premium_user=1`, {
+                let resp3 = await axios.get(`https://www.freepik.com/download-file/${itemId}?is_premium_item=1&is_premium_user=1&token=${token}`, {
                     headers: {
                         'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.148 Safari/537.36',
                         'upgrade-insecure-requests': 1,
@@ -167,6 +391,14 @@ class FreepikController {
             } catch (error) {
                 this._mergeCookie(this._parseCookieBrower(error.response.headers['set-cookie']), cookie)
                 await this._setCookie(cookie)
+
+                // Send event
+                await this._sendEvent(link, itemId)
+
+                // Send point gooogle
+
+                await this.sendPointGG(link, itemDetail)
+                
                 if ( error.response.headers.location.indexOf('/download/') != -1) {
                     return error.response.headers.location
                 }
@@ -178,8 +410,6 @@ class FreepikController {
         }
         
     }
-
-    
 
     generateBoundary(){
         const alphaNumericEncodingMap = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB'; //yes I know, "AB" appears twice

@@ -36,17 +36,17 @@
   <script>
     var geting = false;
 
-    $(document).ready(function() {
-      $.ajax({
-          url: "/account",
-          dataType: 'json'
-        }).done(function(response) {
-          if (response.code == 1) {
-            $('.static .count-download').html('Count Download: ' + response.data.countDownloads)
-            $('.static .limit-download').html('Limit Download: ' + response.data.limitDownloads)
-          }
-        });
-    })
+    // $(document).ready(function() {
+    //   $.ajax({
+    //       url: "/account",
+    //       dataType: 'json'
+    //     }).done(function(response) {
+    //       if (response.code == 1) {
+    //         $('.static .count-download').html('Count Download: ' + response.data.countDownloads)
+    //         $('.static .limit-download').html('Limit Download: ' + response.data.limitDownloads)
+    //       }
+    //     });
+    // })
 
     $('.getlink-input button').click(function() {
       var link = $('.getlink-input .freepik-input-link').val()
