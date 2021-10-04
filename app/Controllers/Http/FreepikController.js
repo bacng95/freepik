@@ -18,29 +18,39 @@ class FreepikController {
     }
 
     async refreshCsrfToken () {
-        let cookie = await this._getCookie()
+        try {
+            let cookie = await this._getCookie()
         
-        let resp = await axios.get('https://www.freepik.com/home', {
-            headers: {
-                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.148 Safari/537.36',
-                'upgrade-insecure-requests': 1,
-                'referer': '',
-                'cookie': this._cookieObjectToString(cookie),
-                'accept-encoding': 'gzip, deflate, br',
-                'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-                'x-csrf-token': cookie['csrf_freepik'],
-                'x-requested-with': 'XMLHttpRequest'
-            }
-        })
-        this._mergeCookie(this._parseCookieBrower(resp.headers['set-cookie']), cookie)
-        await this._setCookie(cookie)
-        console.log('Refresh done !')
+            let resp = await axios.get('https://www.freepik.com/home', {
+                headers: {
+                    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.148 Safari/537.36',
+                    'upgrade-insecure-requests': 1,
+                    'referer': '',
+                    'cookie': this._cookieObjectToString(cookie),
+                    'accept-encoding': 'gzip, deflate, br',
+                    'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+                    'x-csrf-token': cookie['csrf_freepik'],
+                    'x-requested-with': 'XMLHttpRequest'
+                }
+            })
+            this._mergeCookie(this._parseCookieBrower(resp.headers['set-cookie']), cookie)
+            await this._setCookie(cookie)
+            console.log('Refresh done !')
+        } catch (error) {
+            console.log('refresh csrf token: ', 'fail')
+        }
     }
 
     async getLinkAction({request, response}) {
         const { url } = request.all()
 
-        let link = await this.getLink(url)
+        let link = '';
+
+        try {
+            link = await this.getLink(url)
+        } catch (error) {
+            console.log('getLink: ', 'fail')
+        }
 
         // Check with captcha
         
