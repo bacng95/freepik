@@ -404,6 +404,7 @@ class FreepikController {
                 
                 return '';
             } catch (error) {
+                console.log('getLink: ', error)
                 this._mergeCookie(this._parseCookieBrower(error.response.headers['set-cookie']), cookie)
                 await this._setCookie(cookie)
 
