@@ -82,7 +82,8 @@ class FreepikController {
         let itemId = ''
         if (link && link != '') {
             // itemId = link.toString().replace('.htm', '')
-            itemId = link.toString().split('_')
+            itemId = link.toString().split('#')
+            itemId = itemId[0].toString().split('_')
             itemId = itemId[itemId.length - 1]
             itemId = itemId.split('.')
             itemId = itemId[0]
