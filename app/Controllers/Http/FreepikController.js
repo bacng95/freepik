@@ -353,34 +353,46 @@ class FreepikController {
 
             const itemDetail = await this.getDetail(link)
         
-            let resp = await axios.get(`https://www.freepik.com/xhr/register-download/${itemId}`, {
-                headers: {
-                    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.148 Safari/537.36',
-                    'upgrade-insecure-requests': 1,
-                    'referer': link,
-                    'cookie': this._cookieObjectToString(cookie),
-                    'accept-encoding': 'gzip, deflate, br',
-                    'x-csrf-token': cookie['csrf_freepik'],
-                    'x-requested-with': 'XMLHttpRequest'
-                },
-                maxRedirects: 0
-            })
+            let resp
+
+            try {
+                resp = await axios.get(`https://www.freepik.com/xhr/register-download/${itemId}`, {
+                    headers: {
+                        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.148 Safari/537.36',
+                        'upgrade-insecure-requests': 1,
+                        'referer': link,
+                        'cookie': this._cookieObjectToString(cookie),
+                        'accept-encoding': 'gzip, deflate, br',
+                        'x-csrf-token': cookie['csrf_freepik'],
+                        'x-requested-with': 'XMLHttpRequest'
+                    },
+                    maxRedirects: 0
+                })
+            } catch (error) {
+                console.log('getLink - resp: ', error)
+            }
     
             this._mergeCookie(this._parseCookieBrower(resp.headers['set-cookie']), cookie)
             await this._setCookie(cookie)
 
-            let resp2 = await axios.get('https://www.freepik.com/xhr/validate', {
-                headers: {
-                    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.148 Safari/537.36',
-                    'upgrade-insecure-requests': 1,
-                    'referer': link,
-                    'cookie': this._cookieObjectToString(cookie),
-                    'accept-encoding': 'gzip, deflate, br',
-                    'x-csrf-token': cookie['csrf_freepik'],
-                    'x-requested-with': 'XMLHttpRequest'
-                },
-                maxRedirects: 0
-            })
+            let resp2
+
+            try {
+                resp2 = await axios.get('https://www.freepik.com/xhr/validate', {
+                    headers: {
+                        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.148 Safari/537.36',
+                        'upgrade-insecure-requests': 1,
+                        'referer': link,
+                        'cookie': this._cookieObjectToString(cookie),
+                        'accept-encoding': 'gzip, deflate, br',
+                        'x-csrf-token': cookie['csrf_freepik'],
+                        'x-requested-with': 'XMLHttpRequest'
+                    },
+                    maxRedirects: 0
+                })
+            } catch (error) {
+                console.log('getLink - resp2: ', error)
+            }
 
             this._mergeCookie(this._parseCookieBrower(resp2.headers['set-cookie']), cookie)
             await this._setCookie(cookie)
@@ -404,7 +416,7 @@ class FreepikController {
                 
                 return '';
             } catch (error) {
-                console.log('getLink: ', error)
+                console.log('getLink - error: ', error)
                 this._mergeCookie(this._parseCookieBrower(error.response.headers['set-cookie']), cookie)
                 await this._setCookie(cookie)
 
