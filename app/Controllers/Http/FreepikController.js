@@ -49,7 +49,7 @@ class FreepikController {
         try {
             link = await this.getLink(url)
         } catch (error) {
-            console.log('getLink: ', 'fail')
+            console.log('getLink: ', 'fail', error)
         }
 
         // Check with captcha
