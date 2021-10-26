@@ -96,6 +96,8 @@ section:before {
 
 .static {
   margin-bottom: 30px;
+  display: flex;
+  flex-direction: column;
 }
 
 .static span {

@@ -62,9 +62,9 @@
         }).done(function(response) {
             geting = false
           if (response.code == 1) {
-            $('.button-download').html('<a target="_blank" href="' + response.data.link + '" class="link-download">LINK CỦA ĐẠI CA ĐÂY</a>')
-            $('.static .count-download').html('Count Download: ' + response.data.account.countDownloads)
-            $('.static .limit-download').html('Limit Download: ' + response.data.account.limitDownloads)
+            $('.button-download').html('<a target="_blank" href="' + response.data.url + '" class="link-download">LINK CỦA ĐẠI CA ĐÂY</a>')
+            $('.static .count-download').html('Count Download: ' + response.data.todayDownloads)
+            $('.static .limit-download').html('File: ' + response.data.filename)
           } else {
             $('.button-download').html('<span class="waiting-geting">' + response.message + '</a>')
           }

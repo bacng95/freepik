@@ -23,7 +23,7 @@ class FreepikController {
         
             let resp = await axios.get('https://www.freepik.com/home', {
                 headers: {
-                    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.148 Safari/537.36',
+                    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) coc_coc_browser/99.0.98 Chrome/93.0.4577.98 Safari/537.36',
                     'upgrade-insecure-requests': 1,
                     'referer': '',
                     'cookie': this._cookieObjectToString(cookie),
@@ -224,7 +224,7 @@ class FreepikController {
          // Lấy detail
         const itemDetailt = await axios.get(`https://www.freepik.com/xhr/detail/${itemId}`, {
             headers: {
-                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.148 Safari/537.36',
+                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) coc_coc_browser/99.0.98 Chrome/93.0.4577.98 Safari/537.36',
                 'referer': url,
                 'cookie': this._cookieObjectToString(cookie),
                 'accept-encoding': 'gzip, deflate, br',
@@ -352,16 +352,19 @@ class FreepikController {
 
             // truy cap website
 
+            await this._sendEvent(link, itemId)
+
             const itemDetail = await this.getDetail(link)
         
             let resp
 
             try {
-                resp = await axios.get(`https://www.freepik.com/xhr/register-download/${itemId}`, {
+                resp = await axios.get(`https://www.freepik.com/xhr/download-url/${itemId}`, {
                     headers: {
-                        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.148 Safari/537.36',
-                        'upgrade-insecure-requests': 1,
+                        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) coc_coc_browser/99.0.98 Chrome/93.0.4577.98 Safari/537.36',
+                        // 'upgrade-insecure-requests': 1,
                         'referer': link,
+                        'accept': 'application/json, text/plain, */*',
                         'cookie': this._cookieObjectToString(cookie),
                         'accept-encoding': 'gzip, deflate, br',
                         'x-csrf-token': cookie['csrf_freepik'],
@@ -369,73 +372,89 @@ class FreepikController {
                     },
                     maxRedirects: 0
                 })
+
             } catch (error) {
                 console.log('getLink - resp: ', error)
             }
     
             this._mergeCookie(this._parseCookieBrower(resp.headers['set-cookie']), cookie)
             await this._setCookie(cookie)
-
-            let resp2
-
-            try {
-                resp2 = await axios.get('https://www.freepik.com/xhr/validate', {
-                    headers: {
-                        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.148 Safari/537.36',
-                        'upgrade-insecure-requests': 1,
-                        'referer': link,
-                        'cookie': this._cookieObjectToString(cookie),
-                        'accept-encoding': 'gzip, deflate, br',
-                        'x-csrf-token': cookie['csrf_freepik'],
-                        'x-requested-with': 'XMLHttpRequest'
-                    },
-                    maxRedirects: 0
-                })
-            } catch (error) {
-                console.log('getLink - resp2: ', error)
-            }
-
-            this._mergeCookie(this._parseCookieBrower(resp2.headers['set-cookie']), cookie)
-            await this._setCookie(cookie)
-
-            try {
-                let resp3 = await axios.get(`https://www.freepik.com/download-file/${itemId}?is_premium_item=1&is_premium_user=1&token=${token}`, {
-                    headers: {
-                        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.148 Safari/537.36',
-                        'upgrade-insecure-requests': 1,
-                        'referer': link,
-                        'cookie': this._cookieObjectToString(cookie),
-                        'accept-encoding': 'gzip, deflate, br',
-                        'x-csrf-token': cookie['csrf_freepik'],
-                        'x-requested-with': 'XMLHttpRequest'
-                    },
-                    maxRedirects: 0
-                })
-    
-                this._mergeCookie(this._parseCookieBrower(resp3.headers['set-cookie']), cookie)
-                await this._setCookie(cookie)
+            
+            if (resp && resp.data.success) {
                 
-                return '';
-            } catch (error) {
-                console.log('getLink - error: ', error)
-                this._mergeCookie(this._parseCookieBrower(error.response.headers['set-cookie']), cookie)
-                await this._setCookie(cookie)
-
-                // Send event
-                await this._sendEvent(link, itemId)
-
                 // Send point gooogle
 
                 await this.sendPointGG(link, itemDetail)
-                
-                if ( error.response.headers.location.indexOf('/download/') != -1) {
-                    return error.response.headers.location
-                }
-                return {
-                    link: error.response.headers.location,
-                    account: resp2.data
-                }
+                return resp.data
+
             }
+
+            // return {
+            //     link: error.response.headers.location,
+            //     account: resp2.data
+            // }
+
+
+            // let resp2
+
+            // try {
+            //     resp2 = await axios.get('https://www.freepik.com/xhr/validate', {
+            //         headers: {
+            //             'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.148 Safari/537.36',
+            //             'upgrade-insecure-requests': 1,
+            //             'referer': link,
+            //             'cookie': this._cookieObjectToString(cookie),
+            //             'accept-encoding': 'gzip, deflate, br',
+            //             'x-csrf-token': cookie['csrf_freepik'],
+            //             'x-requested-with': 'XMLHttpRequest'
+            //         },
+            //         maxRedirects: 0
+            //     })
+            // } catch (error) {
+            //     console.log('getLink - resp2: ', error)
+            // }
+
+            // this._mergeCookie(this._parseCookieBrower(resp2.headers['set-cookie']), cookie)
+            // await this._setCookie(cookie)
+
+            // try {
+            //     let resp3 = await axios.get(`https://www.freepik.com/download-file/${itemId}?is_premium_item=1&is_premium_user=1&token=${token}`, {
+            //         headers: {
+            //             'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.148 Safari/537.36',
+            //             'upgrade-insecure-requests': 1,
+            //             'referer': link,
+            //             'cookie': this._cookieObjectToString(cookie),
+            //             'accept-encoding': 'gzip, deflate, br',
+            //             'x-csrf-token': cookie['csrf_freepik'],
+            //             'x-requested-with': 'XMLHttpRequest'
+            //         },
+            //         maxRedirects: 0
+            //     })
+    
+            //     this._mergeCookie(this._parseCookieBrower(resp3.headers['set-cookie']), cookie)
+            //     await this._setCookie(cookie)
+                
+            //     return '';
+            // } catch (error) {
+            //     console.log('getLink - error: ', error)
+            //     this._mergeCookie(this._parseCookieBrower(error.response.headers['set-cookie']), cookie)
+            //     await this._setCookie(cookie)
+
+            //     // Send event
+            //     await this._sendEvent(link, itemId)
+
+            //     // Send point gooogle
+
+            //     await this.sendPointGG(link, itemDetail)
+                
+            //     if ( error.response.headers.location.indexOf('/download/') != -1) {
+            //         return error.response.headers.location
+            //     }
+            //     return {
+            //         link: error.response.headers.location,
+            //         account: resp2.data
+            //     }
+            // }
         }
         
     }
