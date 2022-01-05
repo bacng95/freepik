@@ -46,6 +46,8 @@ class FreepikController {
 
         let link = '';
 
+        await this.renewToken()
+        
         try {
             link = await this.getLink(url)
         } catch (error) {
@@ -90,6 +92,32 @@ class FreepikController {
         }
 
         return itemId
+    }
+
+    async renewToken() {
+        // Gửi last failed payment
+        const itemDetailt = await axios.get('https://www.freepik.com/xhr/user/last-failed-payment', {
+            headers: {
+                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) coc_coc_browser/99.0.98 Chrome/93.0.4577.98 Safari/537.36',
+                'referer': 'https://www.freepik.com/home',
+                'cookie': this._cookieObjectToString(cookie),
+                'accept-encoding': 'gzip, deflate, br',
+                'accept': 'application/json, text/plain, */*',
+                'accept-language': 'vi-VN,vi;q=0.9,fr-FR;q=0.8,fr;q=0.7,en-US;q=0.6,en;q=0.5',
+                'sec-fetch-dest': 'empty',
+                'sec-fetch-mode': 'cors',
+                'sec-fetch-site': 'same-origin',
+                'x-csrf-token': cookie['csrf_freepik'],
+                'x-requested-with': 'XMLHttpRequest'
+            },
+            maxRedirects: 0
+        })
+
+        
+        this._mergeCookie(this._parseCookieBrower(itemDetailt.headers['set-cookie']), cookie)
+        await this._setCookie(cookie)
+
+        return true
     }
 
     async goingWebsite (url) {
