@@ -474,6 +474,7 @@ class FreepikController {
     
                         await this.sendPointGG(link, itemDetail)
                         
+console.log(error.response);
                         if ( error.response.headers.location.indexOf('/download/') != -1) {
                             return error.response.headers.location
                         }
